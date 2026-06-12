@@ -42,6 +42,22 @@ def test_mutation_without_side_effects_is_flagged():
     assert "CD006" in rules, rules
 
 
+def test_slop_description_is_flagged():
+    tool = {
+        "name": "search_invoices",
+        "description": "A powerful tool that seamlessly searches invoices. "
+        "Returns matching invoice records, or an error if the query is invalid.",
+        "inputSchema": {"type": "object", "properties": {
+            "query": {"type": "string", "description": "Full-text query over invoice fields."}
+        }, "required": ["query"]},
+    }
+    findings = lint_tool(tool)
+    cd011 = [f for f in findings if f["rule"] == "CD011"]
+    assert cd011, findings
+    # The finding names the offending words so the fix is mechanical.
+    assert "powerful" in cd011[0]["message"] and "seamlessly" in cd011[0]["message"]
+
+
 def test_overlap_is_flagged():
     twins = [
         {"name": "fetch_user", "description": "Fetch the user profile record "

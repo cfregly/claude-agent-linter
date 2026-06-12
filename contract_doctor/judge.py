@@ -20,7 +20,10 @@ inputSchema). Keep the tool's purpose identical. Fix every finding: precise
 2-4 sentence description with exact semantics, documented failure modes,
 declared side effects/idempotency for mutations, a description for every
 parameter, enums/formats/patterns for shaped strings, and a 'required' array.
-Rename the tool only if the linter flagged the name as generic."""
+Rename the tool only if the linter flagged the name as generic.
+Write the contract plain: no marketing adjectives ('powerful', 'seamless',
+'robust'), no filler, no em-dashes. Every sentence states semantics the
+caller can act on; an adjective that carries no behavior gets cut."""
 
 
 def rewrite_tool(tool: dict, findings: list[dict]) -> dict:

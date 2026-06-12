@@ -12,7 +12,7 @@ beat vibes even for prose.
 
 - **Problem it solves:** agents misuse tools whose contracts are underspecified. Teams debug the model when they should be fixing the interface.
 - **Run in under 5 minutes:** `python -m contract_doctor examples/vague_tools.json` - no dependencies, stdlib only.
-- **Learn in 15 minutes:** the ten contract rules below, the CI gate, and the judge loop.
+- **Learn in 15 minutes:** the eleven contract rules below, the CI gate, and the judge loop.
 - **Claude features it proves:** MCP tool schemas as a first-class surface, plus Claude-as-judge with deterministic re-validation.
 - **Production lesson it encodes:** tool descriptions are API contracts. Failure modes and side effects are half the contract.
 
@@ -113,7 +113,7 @@ re-lint: 11 (F) -> 100 (A)
 
 The judge writes prose. The linter keeps the score honest. That order matters.
 
-## The ten rules
+## The eleven rules
 
 | Rule | Severity | What it catches |
 |---|---|---|
@@ -127,6 +127,7 @@ The judge writes prose. The linter keeps the score honest. That order matters.
 | CD008 | warn | Near-duplicate tools the model can't choose between |
 | CD009 | info | No `required` array - the model guesses what it may omit |
 | CD010 | info | 3+ parameters and no worked example |
+| CD011 | warn | Marketing slop (`powerful`, `seamless`, `robust`) - adjectives spending tokens that semantics needs |
 
 Scoring: each tool starts at 100. Error −15, warn −8, info −3. A ≥90, B ≥80,
 C ≥65, D ≥50, F below.

@@ -55,6 +55,14 @@ SHAPED_PARAM_NAME = re.compile(
     re.I,
 )
 
+SLOP_LANGUAGE = re.compile(
+    r"\b(powerful|seamless(?:ly)?|effortless(?:ly)?|easily|blazing(?:ly)?|"
+    r"cutting.edge|best.in.class|state.of.the.art|next.generation|intuitive|"
+    r"supercharge[sd]?|magic(?:al(?:ly)?)?|leverag\w*|robust(?:ly)?|"
+    r"game.chang\w*|revolutionar\w*|world.class)\b",
+    re.I,
+)
+
 
 def _sentences(text: str) -> int:
     return len([s for s in re.split(r"[.!?]\s", text.strip()) if len(s) > 8])
@@ -178,6 +186,18 @@ def lint_tool(tool: dict) -> list[dict]:
             f"{len(props)} parameters and no worked example anywhere",
             "Add one example call in the description; examples beat prose for "
             "multi-param tools.",
+        ))
+
+    # CD011 — marketing slop is anti-contract: it spends tokens on vibes.
+    slop = sorted({m.group(0).lower() for m in SLOP_LANGUAGE.finditer(desc)})
+    if slop:
+        findings.append(_finding(
+            "CD011", "warn", name,
+            f"description contains slop ({', '.join(slop)}); adjectives are "
+            "not semantics",
+            "Delete the marketing words and spend the tokens on behavior: "
+            "exact semantics, failure modes, return shape. The model routes "
+            "on meaning, not enthusiasm.",
         ))
 
     return findings
