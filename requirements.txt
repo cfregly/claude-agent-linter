@@ -1,0 +1,5 @@
+# Core linter: stdlib only — nothing to install.
+#
+# Optional extras:
+#   anthropic   # --judge: Claude rewrites the worst tool contract
+#   mcp         # lint a FastMCP server .py directly instead of a tools JSON

@@ -1,0 +1,59 @@
+{
+  "tools": [
+    {
+      "name": "get_data",
+      "description": "Gets the data.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "process",
+      "description": "Process the input.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": { "type": "string" },
+          "mode": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "update",
+      "description": "Updates a record.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "send",
+      "description": "Sends it to the recipient.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "to": { "type": "string" },
+          "msg": { "type": "string" },
+          "priority": { "type": "string" }
+        }
+      }
+    },
+    {
+      "name": "handle_record",
+      "description": "Handles a record.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "value": { "type": "string" }
+        }
+      }
+    }
+  ]
+}

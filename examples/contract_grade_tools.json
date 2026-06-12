@@ -1,0 +1,96 @@
+{
+  "tools": [
+    {
+      "name": "search_customer_records",
+      "description": "Search customer records by free-text query over name, email, and company fields; matching is case-insensitive substring. Returns a JSON list of records (id, name, email, plan) ordered by last activity, at most 25. Returns an empty list — never an error — when nothing matches, so treat [] as 'no such customer'.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {
+            "type": "string",
+            "description": "Free-text query, e.g. 'acme' or 'jane@'. Minimum 2 characters; shorter queries return {\"error\": \"query too short\"}."
+          }
+        },
+        "required": ["q"]
+      }
+    },
+    {
+      "name": "normalize_invoice",
+      "description": "Normalize a raw invoice payload into the canonical schema (snake_case keys, ISO-8601 dates, amounts in cents). Read-only: returns the normalized JSON and never modifies stored data. Returns {\"error\": ..., \"field\": ...} naming the first field that fails validation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "input": {
+            "type": "string",
+            "description": "The raw invoice as a JSON string, e.g. '{\"Amount\": \"$12.50\", \"Date\": \"3/4/2026\"}'."
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["strict", "lenient"],
+            "description": "strict: any unparseable field is an error. lenient: unparseable fields are returned under 'unparsed' instead."
+          }
+        },
+        "required": ["input", "mode"]
+      }
+    },
+    {
+      "name": "update_invoice_status",
+      "description": "Set the status of one invoice. This modifies the stored record; the change is idempotent (setting the same status twice is a no-op) and reversible by setting a previous status. Returns the updated record as JSON, or {\"error\": \"unknown invoice\"} with the list of valid ids if the id does not exist.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^inv_[a-z0-9]{8}$",
+            "description": "Invoice id in the form 'inv_' + 8 lowercase alphanumerics, e.g. 'inv_a1b2c3d4'."
+          },
+          "value": {
+            "type": "string",
+            "enum": ["draft", "sent", "paid", "void"],
+            "description": "The new status. 'void' excludes the invoice from revenue reports but does not delete it."
+          }
+        },
+        "required": ["id", "value"]
+      }
+    },
+    {
+      "name": "send_invoice_reminder",
+      "description": "Email a payment reminder for one overdue invoice to its billing contact. Side effect: sends a real email; safe to retry only after 24h (the server suppresses duplicates within that window and returns {\"suppressed\": true}). Returns {\"sent\": true, \"to\": ...} on success, or {\"error\": ...} if the invoice is not overdue or has no billing email. Example: send_invoice_reminder(id='inv_a1b2c3d4', priority='normal').",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^inv_[a-z0-9]{8}$",
+            "description": "Invoice id, e.g. 'inv_a1b2c3d4'. Must reference an overdue invoice."
+          },
+          "msg": {
+            "type": "string",
+            "description": "Optional one-paragraph note prepended to the standard reminder template. Plain text; HTML is stripped."
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["normal", "urgent"],
+            "description": "urgent adds the account manager in CC. Default behavior when omitted: normal."
+          }
+        },
+        "required": ["id"]
+      }
+    },
+    {
+      "name": "archive_customer_record",
+      "description": "Archive one customer record so it stops appearing in search_customer_records results. The record is retained and can be restored; archiving an already-archived record is a no-op that returns {\"already_archived\": true}. Returns the archived record as JSON, or {\"error\": \"unknown id\"} if the id does not exist.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^cus_[a-z0-9]{8}$",
+            "description": "Customer id in the form 'cus_' + 8 lowercase alphanumerics, e.g. 'cus_9f8e7d6c'."
+          }
+        },
+        "required": ["id"]
+      }
+    }
+  ]
+}
