@@ -5,12 +5,14 @@ yields findings. A finding is a dict: {rule, severity, tool, param, message, fix
 Severities: error (-15), warn (-8), info (-3). A tool starts at 100; the floor is 0.
 
 The rules encode one production lesson: most agent failures are vague tool
-semantics, not model failures. A tool description is an API contract — the
+semantics, not model failures. A tool description is an API contract: the
 model is the caller, and it can't read your source.
 """
 
 from __future__ import annotations
 
+import json
+import pathlib
 import re
 from itertools import combinations
 
@@ -56,17 +58,14 @@ SHAPED_PARAM_NAME = re.compile(
 )
 
 # Marketing slop in a tool description spends tokens on vibes instead of
-# semantics. Second block merges the gstack AI vocabulary (github.com/garrytan/
-# gstack, MIT).
+# semantics. The shared buzzword canon loads from slop_rules.json (synced from
+# the claude-deslop repo; do not hand-edit). _AGENT_EXTRA adds the few words
+# specific to tool-description fluff that do not belong in the cross-repo canon.
+_RULES = json.loads((pathlib.Path(__file__).parent / "slop_rules.json").read_text())
+_AGENT_EXTRA = ["powerful", "effortless", "easily", "intuitive", "magic"]
 SLOP_LANGUAGE = re.compile(
-    r"\b(powerful|seamless(?:ly)?|effortless(?:ly)?|easily|blazing(?:ly)?|"
-    r"cutting.edge|best.in.class|state.of.the.art|next.generation|intuitive|"
-    r"supercharge[sd]?|magic(?:al(?:ly)?)?|leverag\w*|robust(?:ly)?|"
-    r"game.chang\w*|revolutionar\w*|world.class|"
-    r"delv\w*|synerg\w*|holistic|passionate|innovat\w*|empower\w*|"
-    r"furthermore|moreover|additionally|tapestr\w*|landscape|foster\w*|"
-    r"underscore\w*|showcas\w*|multifaceted|vibrant|intricate|nuanced|"
-    r"pivotal|comprehensiv\w*|crucial|significan\w*|fundamental\w*|interplay)\b",
+    r"\b(?:" + "|".join(re.escape(s) for s in _RULES["buzzwords"] + _AGENT_EXTRA)
+    + r")[a-z]*",
     re.I,
 )
 
