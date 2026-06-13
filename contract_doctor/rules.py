@@ -63,6 +63,31 @@ SHAPED_PARAM_NAME = re.compile(
 # specific to tool-description fluff that do not belong in the cross-repo canon.
 _RULES = json.loads((pathlib.Path(__file__).parent / "slop_rules.json").read_text())
 _AGENT_EXTRA = ["powerful", "effortless", "easily", "intuitive", "magic"]
+
+# --- security lens (CD012-CD014): the LLM/agent slice of an OWASP+STRIDE pass.
+# A raw secret as a model-visible argument. "token" is left out on purpose: it
+# collides with pagination tokens.
+SECRET_PARAM = re.compile(
+    r"(^|_)(password|passwd|pwd|secret|api[_-]?key|apikey|access[_-]?key|"
+    r"private[_-]?key|client[_-]?secret|credential)($|_)", re.I)
+SECRET_WORD = re.compile(
+    r"\b(password|api[ _-]?key|secret key|private key|access key|"
+    r"client secret|credential)\b", re.I)
+# Hard-to-reverse operations. Soft verbs (update, archive, send) are excluded;
+# CD006 already governs ordinary mutations.
+DESTRUCTIVE_VERB = re.compile(
+    r"\b(delete|drop|purge|wipe|erase|truncate|charge|transfer|refund|revoke|"
+    r"destroy|deploy)\b", re.I)
+SAFETY_LANGUAGE = re.compile(
+    r"\b(idempotent|reversible|undo|restore|recoverable|confirm|dry[ -]?run|"
+    r"no-op|soft[ -]?delete|retain|suppress)", re.I)
+# Executes or forwards free-form input into a powerful sink (injection / SSRF).
+INJECTION_SINK = re.compile(
+    r"\b(execute|eval|evaluate|run)\b[^.]{0,30}\b(shell|command|code|sql|query|script)\b"
+    r"|\bsubprocess\b|\bos\.system\b|\braw sql\b"
+    r"|\brender[s]?\b[^.]{0,20}\bhtml\b"
+    r"|\bfetch(?:es)?\b[^.]{0,30}\b(?:url|uri|endpoint)\b"
+    r"|\bSSRF\b", re.I)
 SLOP_LANGUAGE = re.compile(
     r"\b(?:" + "|".join(re.escape(s) for s in _RULES["buzzwords"] + _AGENT_EXTRA)
     + r")[a-z]*",
@@ -218,6 +243,41 @@ def lint_tool(tool: dict) -> list[dict]:
             "Delete the marketing words and spend the tokens on behavior: "
             "exact semantics, failure modes, return shape. The model routes "
             "on meaning, not enthusiasm.",
+        ))
+
+    # CD012 — a raw secret as a model-visible argument. The model (and its
+    # transcript, and any logs) should never see the secret itself.
+    for pname, pschema in props.items():
+        pdesc = pschema.get("description") or ""
+        if SECRET_PARAM.search(pname) or SECRET_WORD.search(pdesc):
+            findings.append(_finding(
+                "CD012", "warn", name,
+                f"parameter '{pname}' takes a raw secret as a model-visible argument",
+                "Don't pass secrets through the model. Reference a server-side "
+                "secret by name or handle and resolve it outside the model's view.",
+                param=pname,
+            ))
+
+    # CD013 — a destructive, hard-to-reverse op with no stated safety contract.
+    if (DESTRUCTIVE_VERB.search(name) or DESTRUCTIVE_VERB.search(desc)) \
+            and not SAFETY_LANGUAGE.search(desc):
+        findings.append(_finding(
+            "CD013", "warn", name,
+            "destructive operation with no stated safety contract",
+            "State the blast radius: reversibility, idempotency, a confirm or "
+            "dry-run path, or what is retained. Agents call destructive tools "
+            "on a guess unless the contract says otherwise.",
+        ))
+
+    # CD014 — executes or forwards free-form input into a powerful sink. This is
+    # the prompt/command-injection and SSRF surface.
+    if INJECTION_SINK.search(desc):
+        findings.append(_finding(
+            "CD014", "warn", name,
+            "injection surface: executes or forwards free-form input to a powerful sink",
+            "Name the trust boundary: what is sanitized, parameterized, or "
+            "allowlisted before this runs. Untrusted input into a code, shell, "
+            "SQL, or URL sink is the injection path.",
         ))
 
     return findings

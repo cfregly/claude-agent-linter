@@ -83,6 +83,46 @@ def test_findings_carry_auto_vs_ask_fix_kind():
     assert by_rule["CD001"] == "ask"
 
 
+def test_security_rules_flag_secret_destructive_and_injection():
+    secret = {
+        "name": "open_db_connection",
+        "description": "Open a pooled database connection and return a connection "
+        "handle as JSON. Idempotent: calling twice returns the same handle.",
+        "inputSchema": {"type": "object", "properties": {
+            "password": {"type": "string", "description": "The database password to authenticate with."}
+        }, "required": ["password"]},
+    }
+    assert "CD012" in {f["rule"] for f in lint_tool(secret)}
+
+    destructive = {
+        "name": "delete_account",
+        "description": "Permanently delete the account and all associated data from "
+        "the database. Returns the deleted id, or an error if the id is unknown.",
+        "inputSchema": {"type": "object", "properties": {
+            "id": {"type": "string", "description": "Account id, e.g. 'acc_12345678'."}
+        }, "required": ["id"]},
+    }
+    assert "CD013" in {f["rule"] for f in lint_tool(destructive)}
+
+    injection = {
+        "name": "run_analytics_query",
+        "description": "Execute the given SQL query against the analytics warehouse "
+        "and return matching rows as a JSON list. The query runs read-only.",
+        "inputSchema": {"type": "object", "properties": {
+            "sql": {"type": "string", "description": "A SQL SELECT statement, e.g. 'SELECT 1'."}
+        }, "required": ["sql"]},
+    }
+    assert "CD014" in {f["rule"] for f in lint_tool(injection)}
+
+
+def test_contract_grade_tools_have_no_security_findings():
+    # The clean example must not trip the security lens (keeps it grade A).
+    report = lint_server(load("contract_grade_tools.json"))
+    sec = {"CD012", "CD013", "CD014"}
+    for t in report["tools"].values():
+        assert not (sec & {f["rule"] for f in t["findings"]}), t["findings"]
+
+
 def test_grade_boundaries():
     assert grade(90) == "A" and grade(89) == "B" and grade(49) == "F"
 

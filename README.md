@@ -113,7 +113,7 @@ re-lint: 11 (F) -> 100 (A)
 
 The judge writes prose. The linter keeps the score honest. That order matters.
 
-## The eleven rules
+## The fourteen rules
 
 | Rule | Severity | What it catches |
 |---|---|---|
@@ -128,6 +128,13 @@ The judge writes prose. The linter keeps the score honest. That order matters.
 | CD009 | info | No `required` array - the model guesses what it may omit |
 | CD010 | info | 3+ parameters and no worked example |
 | CD011 | warn | Marketing slop (`powerful`, `seamless`, `robust`) - adjectives spending tokens that semantics needs |
+| CD012 | warn | Security: a raw secret passed as a model-visible argument |
+| CD013 | warn | Security: a destructive op (delete, charge, transfer) with no stated reversibility or confirmation |
+| CD014 | warn | Security: executes or forwards free-form input into a code, shell, SQL, or URL sink (injection / SSRF) |
+
+CD012-CD014 are the agent/MCP slice of an OWASP + STRIDE pass: the threats that
+are specific to tools an LLM can call. Each finding also carries a `fix_kind`
+(`auto` for mechanical deletions, `ask` for judgment calls).
 
 Scoring: each tool starts at 100. Error −15, warn −8, info −3. A ≥90, B ≥80,
 C ≥65, D ≥50, F below.
