@@ -139,6 +139,20 @@ are specific to tools an LLM can call. Each finding also carries a `fix_kind`
 Scoring: each tool starts at 100. Error −15, warn −8, info −3. A ≥90, B ≥80,
 C ≥65, D ≥50, F below.
 
+## Lint the agent protocol, not just the tools
+
+Tools are half the contract; the agent's rules of engagement are the other
+half. Lint a protocol doc (AGENTS.md or a SKILL.md) for the boundaries an agent
+needs, grouped the way the AGENTS.md convention does:
+
+```bash
+python -m contract_doctor --protocol AGENTS.md
+```
+
+It checks for always-do, ask-first, and never-do boundaries, a failure plan,
+and a success metric (rules PR001-PR005). An agent with no stated boundaries
+acts on a guess, which is how autonomy turns into incidents.
+
 ## Gate it in CI
 
 ```bash
@@ -148,6 +162,10 @@ python -m contract_doctor mcp_tools.json --min-score 80 || exit 1
 Exit code 1 the moment any tool drops below the bar - the same
 evals-before-vibes wiring you'd give an agent's behavior, applied to the
 agent's interface.
+
+## Claude Skill
+
+Packaged as a Claude Skill in [`skills/agent-linter/SKILL.md`](skills/agent-linter/SKILL.md). Upload it in Claude (Settings > Capabilities > Skills), then say "lint my MCP tools" or "harden my agent." Claude reads the tools, runs the rules and the security lens, and can rewrite the worst tool, then re-score it.
 
 ## Why this exists
 

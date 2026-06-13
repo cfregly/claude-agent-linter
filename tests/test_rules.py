@@ -123,6 +123,23 @@ def test_contract_grade_tools_have_no_security_findings():
         assert not (sec & {f["rule"] for f in t["findings"]}), t["findings"]
 
 
+def test_protocol_flags_missing_boundaries():
+    from contract_doctor.protocol import lint_agent_protocol
+    rep = lint_agent_protocol("This agent summarizes invoices for the finance team.")
+    rules = {f["rule"] for f in rep["findings"]}
+    assert {"PR001", "PR002", "PR003"} <= rules
+    assert rep["grade"] == "F"
+
+
+def test_protocol_passes_with_boundaries():
+    from contract_doctor.protocol import lint_agent_protocol
+    doc = ("Always do: read-only queries. Ask first: any write or delete. "
+           "Never do: move money or change permissions. On failure, escalate to a "
+           "human. Success metric: the ticket is resolved and logged.")
+    rep = lint_agent_protocol(doc)
+    assert rep["score"] == 100 and not rep["findings"]
+
+
 def test_grade_boundaries():
     assert grade(90) == "A" and grade(89) == "B" and grade(49) == "F"
 

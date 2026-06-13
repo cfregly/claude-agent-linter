@@ -25,12 +25,29 @@ def main(argv=None) -> int:
         prog="contract_doctor", description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("source", help="tools JSON file or FastMCP server .py")
+    parser.add_argument("source", nargs="?", help="tools JSON file or FastMCP server .py")
+    parser.add_argument("--protocol", help="lint an agent protocol doc (AGENTS.md / "
+                        "SKILL.md style) for always / ask-first / never boundaries and "
+                        "a failure plan, instead of tools")
     parser.add_argument("--json", action="store_true", dest="as_json")
     parser.add_argument("--min-score", type=int, default=70)
     parser.add_argument("--judge", action="store_true")
     args = parser.parse_args(argv)
 
+    if args.protocol:
+        from pathlib import Path
+        from .protocol import lint_agent_protocol
+        rep = lint_agent_protocol(Path(args.protocol).read_text())
+        if args.as_json:
+            print(json.dumps(rep, indent=2))
+        else:
+            print(f"agent-protocol {args.protocol}: {rep['score']}/100 (grade {rep['grade']})")
+            for fnd in rep["findings"]:
+                print(f"  [{fnd['rule']} {fnd['severity']}] {fnd['message']}\n      fix: {fnd['fix']}")
+        return 0 if rep["score"] >= args.min_score else 1
+
+    if not args.source:
+        parser.error("provide a tools source, or --protocol PATH")
     tools = load_tools(args.source)
     report = lint_server(tools)
 
