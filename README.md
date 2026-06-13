@@ -1,5 +1,10 @@
 # claude-agent-linter
 
+[![ci](https://github.com/cfregly/claude-agent-linter/actions/workflows/ci.yml/badge.svg)](https://github.com/cfregly/claude-agent-linter/actions/workflows/ci.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+![agent-linter: a vague server scores 19, the contract-grade rewrite scores 100](docs/demo.svg)
+
 **Harden the agent and assistant interfaces.** Turn vague MCP tools into contract-grade agent interfaces. A vague example server scores 19/100; the contract-grade rewrite scores 100/100. 14 rules, including an OWASP/STRIDE security lens.
 
 Most agent bugs aren't model failures - they're vague tool semantics. The model
@@ -12,7 +17,7 @@ beat vibes even for prose.
 
 - **Problem it solves:** agents misuse tools whose contracts are underspecified. Teams debug the model when they should be fixing the interface.
 - **Run in under 5 minutes:** `python -m contract_doctor examples/vague_tools.json` - no dependencies, stdlib only.
-- **Learn in 15 minutes:** the eleven contract rules below, the CI gate, and the judge loop.
+- **Learn in 15 minutes:** the fourteen contract rules below, the CI gate, and the judge loop.
 - **Claude features it proves:** MCP tool schemas as a first-class surface, plus Claude-as-judge with deterministic re-validation.
 - **Production lesson it encodes:** tool descriptions are API contracts. Failure modes and side effects are half the contract.
 
@@ -88,7 +93,7 @@ Three lessons worth keeping:
    so it grades what the model actually sees, in any framework or language.
 3. **The fail-closed instinct cuts both ways.** A linter that had only ever seen
    its own examples would be a toy. The first outside contact found a real bug
-   in the author's own showcase. That is the test worth passing.
+   in the author's own demo repo. That is the test worth passing.
 
 ```bash
 # gate your own server the same way
@@ -177,6 +182,14 @@ side-effect declarations - is the cheapest reliability win in agent
 engineering, and it's lintable. So lint it.
 
 Pair-built with Claude. That's not a disclaimer, it's the demo.
+
+## Limitations
+
+The linter grades the tool contract, not the code behind it: a 100/100 server
+can still have bugs behind a well-described interface. The security rules
+(CD012-CD014) are a first pass over the threats specific to LLM-callable tools,
+not a full security review. The judge loop needs an API key and is not
+deterministic; the rules keep the score honest.
 
 ## License
 

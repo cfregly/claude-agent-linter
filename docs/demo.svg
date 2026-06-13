@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="200" viewBox="0 0 760 200" role="img" aria-label="agent-linter before and after: a vague server scores 19, the contract-grade rewrite scores 100">
+  <rect width="760" height="200" rx="10" fill="#0d1117"/>
+  <circle cx="26" cy="26" r="6" fill="#ff5f56"/>
+  <circle cx="46" cy="26" r="6" fill="#ffbd2e"/>
+  <circle cx="66" cy="26" r="6" fill="#27c93f"/>
+  <text x="92" y="31" fill="#8b949e" font-family="ui-monospace,Menlo,Consolas,monospace" font-size="13">claude-agent-linter</text>
+  <g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="15">
+    <text x="26" y="80" fill="#8b949e">$ python -m contract_doctor examples/vague_tools.json</text>
+    <text x="26" y="106" fill="#f85149">Server score: 19/100 (grade F)   FAIL</text>
+    <text x="26" y="152" fill="#8b949e">$ python -m contract_doctor examples/contract_grade_tools.json</text>
+    <text x="26" y="178" fill="#3fb950">Server score: 100/100 (grade A)</text>
+  </g>
+</svg>

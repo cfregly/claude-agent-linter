@@ -1,0 +1,10 @@
+{
+  "owner": "cfregly",
+  "repo": "claude-agent-linter",
+  "old_names": [],
+  "docs": ["README.md"],
+  "rule_module": "contract_doctor/rules.py",
+  "rule_prefix": "CD",
+  "rule_check": "count",
+  "rule_count_patterns": ["(\\d+)\\s+rules"]
+}

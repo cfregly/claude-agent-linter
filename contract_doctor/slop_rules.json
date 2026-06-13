@@ -23,6 +23,11 @@
     "welcome to", "unlock the power", "all-in-one solution",
     "your all-in-one", "your one-stop", "take it to the next level"
   ],
+  "draft_markers": [
+    "todo", "fixme", "tbd", "lorem ipsum", "coming soon",
+    "work in progress", "once this repo has a remote", "to be written",
+    "to be added", "fill this in", "replace this"
+  ],
   "visual": {
     "blacklist": [
       "Purple/violet/indigo gradient backgrounds or blue-to-purple color schemes",

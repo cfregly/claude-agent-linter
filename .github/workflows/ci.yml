@@ -9,7 +9,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Test suite
-        run: python -m tests.test_rules
+        run: python tests/test_rules.py
       - name: Vague example must fail the gate
         run: |
           if python -m contract_doctor examples/vague_tools.json; then
@@ -17,3 +17,9 @@ jobs:
           fi
       - name: Contract-grade example must pass the gate
         run: python -m contract_doctor examples/contract_grade_tools.json
+      - name: Doc-correctness gate
+        run: python scripts/check_docs.py
+      - name: De-slop the README
+        run: |
+          pip install --quiet "git+https://github.com/cfregly/claude-deslop"
+          python -m deslop README.md
