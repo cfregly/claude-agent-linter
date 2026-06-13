@@ -23,7 +23,11 @@ parameter, enums/formats/patterns for shaped strings, and a 'required' array.
 Rename the tool only if the linter flagged the name as generic.
 Write the contract plain: no marketing adjectives ('powerful', 'seamless',
 'robust'), no filler, no em-dashes. Every sentence states semantics the
-caller can act on; an adjective that carries no behavior gets cut."""
+caller can act on; an adjective that carries no behavior gets cut.
+
+Each finding carries a 'fix_kind'. Apply 'auto' findings mechanically: delete
+the flagged words and reclaim the tokens for behavior. Treat 'ask' findings as
+the work: write the real semantics, rename, or declare the shape they call for."""
 
 
 def rewrite_tool(tool: dict, findings: list[dict]) -> dict:

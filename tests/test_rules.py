@@ -70,6 +70,19 @@ def test_overlap_is_flagged():
     assert "CD008" in rules, rules
 
 
+def test_findings_carry_auto_vs_ask_fix_kind():
+    tool = {
+        "name": "search_invoices",
+        "description": "A powerful tool that seamlessly searches invoices.",
+        "inputSchema": {"type": "object", "properties": {}},
+    }
+    by_rule = {f["rule"]: f["fix_kind"] for f in lint_tool(tool)}
+    # marketing slop is mechanical: delete the words
+    assert by_rule["CD011"] == "auto"
+    # a thin description needs real semantics written: a judgment call
+    assert by_rule["CD001"] == "ask"
+
+
 def test_grade_boundaries():
     assert grade(90) == "A" and grade(89) == "B" and grade(49) == "F"
 

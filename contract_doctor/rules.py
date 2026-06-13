@@ -55,17 +55,37 @@ SHAPED_PARAM_NAME = re.compile(
     re.I,
 )
 
+# Marketing slop in a tool description spends tokens on vibes instead of
+# semantics. Second block merges the gstack AI vocabulary (github.com/garrytan/
+# gstack, MIT).
 SLOP_LANGUAGE = re.compile(
     r"\b(powerful|seamless(?:ly)?|effortless(?:ly)?|easily|blazing(?:ly)?|"
     r"cutting.edge|best.in.class|state.of.the.art|next.generation|intuitive|"
     r"supercharge[sd]?|magic(?:al(?:ly)?)?|leverag\w*|robust(?:ly)?|"
-    r"game.chang\w*|revolutionar\w*|world.class)\b",
+    r"game.chang\w*|revolutionar\w*|world.class|"
+    r"delv\w*|synerg\w*|holistic|passionate|innovat\w*|empower\w*|"
+    r"furthermore|moreover|additionally|tapestr\w*|landscape|foster\w*|"
+    r"underscore\w*|showcas\w*|multifaceted|vibrant|intricate|nuanced|"
+    r"pivotal|comprehensiv\w*|crucial|significan\w*|fundamental\w*|interplay)\b",
     re.I,
 )
 
 
 def _sentences(text: str) -> int:
     return len([s for s in re.split(r"[.!?]\s", text.strip()) if len(s) > 8])
+
+
+# AUTO-FIX vs ASK, borrowed from gstack's review split. A finding is "auto"
+# when the fix is mechanical (delete the offending tokens) and "ask" when it
+# needs a judgment call: write real semantics, rename a tool, choose a shape.
+# The judge applies auto fixes outright and surfaces ask findings for review.
+FIX_KIND = {
+    "CD011": "auto",  # delete the marketing words; nothing to decide
+}
+
+
+def fix_kind(rule: str) -> str:
+    return FIX_KIND.get(rule, "ask")
 
 
 def _finding(rule, severity, tool, message, fix, param=None):
@@ -76,6 +96,7 @@ def _finding(rule, severity, tool, message, fix, param=None):
         "param": param,
         "message": message,
         "fix": fix,
+        "fix_kind": fix_kind(rule),
     }
 
 
