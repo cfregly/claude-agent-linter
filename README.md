@@ -1,6 +1,6 @@
 # claude-agent-linter
 
-**Harden the agent and assistant interfaces.** Turn vague MCP tools into contract-grade agent interfaces.
+**Harden the agent and assistant interfaces.** Turn vague MCP tools into contract-grade agent interfaces. A vague example server scores 19/100; the contract-grade rewrite scores 100/100. 14 rules, including an OWASP/STRIDE security lens.
 
 Most agent bugs aren't model failures - they're vague tool semantics. The model
 is the caller of your API, and it can't read your source. A tool description
