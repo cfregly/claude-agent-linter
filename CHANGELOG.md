@@ -3,6 +3,17 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-06-13
+
+### Fixed
+- CD012 no longer flags a secret handle or reference (`secret_ref`, `key_id`, or
+  a description that says the raw key never reaches the model). That is the
+  pattern CD012 recommends, so flagging it punished the fix. A raw secret as a
+  model-visible argument still trips it.
+
+### Changed
+- Synced the deslop canon to 1.1.0 (extended dash set).
+
 ## [0.1.1] - 2026-06-13
 
 ### Fixed

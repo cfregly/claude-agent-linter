@@ -1,7 +1,7 @@
 {
   "_comment": "Canonical de-slop ruleset. This file is the single source of truth. The sibling repos (resume/deck builder, the three linters) vendor a synced copy; scripts/sync.py copies this file out and checks for drift. Word and phrase lists merge the workspace canon with the gstack writing rules (github.com/garrytan/gstack, MIT) and the visual-slop tells gstack cites from OpenAI's Designing Delightful Frontends.",
-  "version": "1.0.0",
-  "dashes": ["—", "–"],
+  "version": "1.1.0",
+  "dashes": ["—", "–", "―", "‒"],
   "buzzwords": [
     "leverag", "spearhead", "delv", "synerg", "seamless", "cutting-edge",
     "game-chang", "passionate", "holistic", "empower", "innovat",

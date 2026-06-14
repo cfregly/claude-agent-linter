@@ -188,6 +188,21 @@ def test_grade_boundaries():
     assert grade(90) == "A" and grade(89) == "B" and grade(49) == "F"
 
 
+def test_secret_handle_is_not_flagged_but_raw_secret_is():
+    # CD012 must not punish the pattern it recommends: a handle/reference that
+    # resolves server-side is the fix, not the defect. A raw secret still trips.
+    handle = {"name": "charge_card", "description": "Charges the card and returns "
+              "a receipt id. Returns an error if the card is declined. Idempotent "
+              "on idempotency_key.", "inputSchema": {"type": "object", "properties": {
+                  "secret_ref": {"type": "string", "description": "A handle naming "
+                  "the server-side Stripe key. The raw key never passes through the model."}}}}
+    raw = {"name": "charge", "description": "Charges a card. Returns an error if "
+           "declined.", "inputSchema": {"type": "object", "properties": {
+               "api_key": {"type": "string", "description": "The Stripe secret key to authorize with."}}}}
+    assert "CD012" not in {f["rule"] for f in lint_tool(handle)}
+    assert "CD012" in {f["rule"] for f in lint_tool(raw)}
+
+
 if __name__ == "__main__":
     failures = 0
     for name, fn in sorted(globals().items()):

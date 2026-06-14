@@ -73,6 +73,16 @@ SECRET_PARAM = re.compile(
 SECRET_WORD = re.compile(
     r"\b(password|api[ _-]?key|secret key|private key|access key|"
     r"client secret|credential)\b", re.I)
+# A reference to a secret, not the secret itself: a name, id, handle, or ARN
+# that resolves server-side. This is the pattern CD012 tells you to use, so it
+# must not be flagged as the very thing it fixes. Matches on the param name
+# (secret_ref, key_id, secret_name) or a description that says it is a handle.
+SECRET_HANDLE_PARAM = re.compile(
+    r"(^|_)(ref|id|name|handle|alias|arn|uri|url|path|slug)($|_)", re.I)
+SECRET_HANDLE_WORD = re.compile(
+    r"\b(handle|reference|references|identifier|alias|by name|name of|arn|"
+    r"server-side secret|secret manager|vault|never (?:passes|sent|exposed|"
+    r"leaves)|not the (?:raw|actual) (?:secret|key))\b", re.I)
 # Hard-to-reverse operations. Soft verbs (update, archive, send) are excluded;
 # CD006 already governs ordinary mutations.
 DESTRUCTIVE_VERB = re.compile(
@@ -256,6 +266,9 @@ def lint_tool(tool: dict) -> list[dict]:
     for pname, pschema in props.items():
         pdesc = pschema.get("description") or ""
         if SECRET_PARAM.search(pname) or SECRET_WORD.search(pdesc):
+            # A handle or reference is the fix, not the defect -- don't flag it.
+            if SECRET_HANDLE_PARAM.search(pname) or SECRET_HANDLE_WORD.search(pdesc):
+                continue
             findings.append(_finding(
                 "CD012", "warn", name,
                 f"parameter '{pname}' takes a raw secret as a model-visible argument",
