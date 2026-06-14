@@ -211,6 +211,21 @@ def test_cd006_requires_safety_language_in_any_verb_mood():
     assert not fires("Create a record. Idempotent: the same key is a no-op. Returns the id.")
 
 
+def test_cd012_flags_auth_tokens_but_not_pagination_tokens():
+    # The "token" exclusion that avoids pagination false positives must not also
+    # let a real bearer/OAuth token leak through the model unflagged.
+    def cd012(pname, pdesc):
+        t = {"name": "list_messages", "description": "List messages. Returns a "
+             "page and a cursor, or an error if the channel is unknown.",
+             "inputSchema": {"type": "object", "properties": {pname: {"type": "string", "description": pdesc}}}}
+        return "CD012" in {f["rule"] for f in lint_tool(t)}
+    assert cd012("access_token", "The OAuth access token to authenticate with.")
+    assert cd012("bearer_token", "Bearer token for the API.")
+    assert not cd012("next_token", "Opaque cursor for the next page of results.")
+    assert not cd012("page_token", "Token for the next page.")
+    assert not cd012("access_token_ref", "A handle naming the server-side token.")
+
+
 def test_secret_handle_is_not_flagged_but_raw_secret_is():
     # CD012 must not punish the pattern it recommends: a handle/reference that
     # resolves server-side is the fix, not the defect. A raw secret still trips.

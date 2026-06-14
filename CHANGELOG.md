@@ -3,6 +3,15 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-06-13
+
+### Fixed
+- CD012 catches auth-flavored tokens (`access_token`, `bearer_token`,
+  `refresh_token`, `oauth_token`, `session_token`) passed as model-visible
+  arguments. The broad `token` exclusion that avoids pagination false positives
+  used to let a real bearer-token leak through unflagged. Pagination tokens
+  (`next_token`, `page_token`, `cursor`) and secret handles stay exempt.
+
 ## [0.1.3] - 2026-06-13
 
 ### Fixed

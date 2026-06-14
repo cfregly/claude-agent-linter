@@ -75,9 +75,15 @@ _AGENT_EXTRA = ["powerful", "effortless", "easily", "intuitive", "magic"]
 SECRET_PARAM = re.compile(
     r"(^|_)(password|passwd|pwd|secret|api[_-]?key|apikey|access[_-]?key|"
     r"private[_-]?key|client[_-]?secret|credential)($|_)", re.I)
+# Auth-flavored tokens are secrets; pagination tokens (next_token, page_token,
+# cursor) are not. Match the auth prefixes specifically so a bare or pagination
+# "token" stays exempt while a real bearer/OAuth leak through the model does not.
+SECRET_TOKEN = re.compile(
+    r"(^|_)(access|oauth|bearer|refresh|auth|session)[_-]?token($|_)", re.I)
 SECRET_WORD = re.compile(
     r"\b(password|api[ _-]?key|secret key|private key|access key|"
-    r"client secret|credential)\b", re.I)
+    r"client secret|credential|bearer token|access token|refresh token|"
+    r"oauth token)\b", re.I)
 # A reference to a secret, not the secret itself: a name, id, handle, or ARN
 # that resolves server-side. This is the pattern CD012 tells you to use, so it
 # must not be flagged as the very thing it fixes. Matches on the param name
@@ -279,7 +285,7 @@ def lint_tool(tool: dict) -> list[dict]:
     # transcript, and any logs) should never see the secret itself.
     for pname, pschema in props.items():
         pdesc = pschema.get("description") or ""
-        if SECRET_PARAM.search(pname) or SECRET_WORD.search(pdesc):
+        if SECRET_PARAM.search(pname) or SECRET_TOKEN.search(pname) or SECRET_WORD.search(pdesc):
             # A handle or reference is the fix, not the defect -- don't flag it.
             if SECRET_HANDLE_PARAM.search(pname) or SECRET_HANDLE_WORD.search(pdesc):
                 continue
