@@ -241,8 +241,12 @@ def lint_tool(tool: dict) -> list[dict]:
     # plus an unambiguous verb anywhere ("bulk_create"). A trailing noun that
     # merely contains a verb is not a mutation: "list_charges" is a read.
     tokens = [t for t in re.split(r"[_\-]", name.lower()) if t]
-    lead = tokens[0] if tokens else ""
-    if lead in MUTATING_SET or any(t in UNAMBIGUOUS_MUTATING for t in tokens[1:]):
+    # A verb in action position makes this a mutation: any token but the trailing
+    # object noun ("slack_post_message", "charge_card"), plus an unambiguous verb
+    # even when trailing ("force_delete"). A noun-risky verb in the trailing slot
+    # is the object, not the action, so "list_charges"/"get_post" stay reads.
+    action = tokens[:-1] if len(tokens) > 1 else tokens
+    if any(t in MUTATING_SET for t in action) or (tokens and tokens[-1] in UNAMBIGUOUS_MUTATING):
         if not SIDE_EFFECT_LANGUAGE.search(desc):
             findings.append(_finding(
                 "CD006", "error", name,

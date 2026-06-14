@@ -3,10 +3,18 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-06-13
+
+### Fixed
+- CD006 mutation detection reads the verb's position, not just the leading
+  token: a verb anywhere but the trailing object noun counts, so service-prefixed
+  names ("slack_post_message", "stripe_charge_card") are mutations again while
+  trailing verb-nouns ("list_charges", "github_get_post") stay reads.
+
 ## [0.1.5] - 2026-06-13
 
 ### Fixed
-- CD006 judges "mutating" by the leading name token, not a substring. A read
+- CD006 judges "mutating" by the name's tokens, not a raw substring. A read
   whose object noun contains a verb ("list_charges", "get_payments", "get_post")
   is no longer mislabelled a mutation. Found by linting the real Stripe MCP.
 

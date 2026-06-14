@@ -203,15 +203,21 @@ def test_cd003_allows_short_but_informative_descriptions():
 
 def test_cd006_verb_noun_reads_are_not_mutations():
     # Regression from the real Stripe MCP: "list_charges" is a read; the noun
-    # "charges" contains the verb "charge". A trailing verb-noun is not a mutation.
+    # "charges" contains the verb "charge". A trailing verb-noun is the object,
+    # not the action. Service-prefixed names ("slack_post_message") put the verb
+    # in the middle, so it still counts.
     def cd006(name):
         return "CD006" in {f["rule"] for f in lint_tool({"name": name,
             "description": "Returns rows, or an error if the query fails.",
             "inputSchema": {"type": "object", "properties": {"x": {"type": "string", "description": "The id to act on."}}}})}
-    for read in ("list_charges", "get_payments", "get_post", "search_transfers"):
-        assert not cd006(read), read
-    for mut in ("create_payout", "charge_card", "post_message", "bulk_create_users"):
-        assert cd006(mut), mut
+    reads = ("list_charges", "get_payments", "get_post", "search_transfers",
+             "stripe_list_charges", "github_get_post", "slack_list_channels")
+    muts = ("create_payout", "charge_card", "post_message", "bulk_create_users",
+            "slack_post_message", "stripe_charge_card", "force_delete", "github_create_issue")
+    for r in reads:
+        assert not cd006(r), r
+    for m in muts:
+        assert cd006(m), m
 
 
 def test_cd006_requires_safety_language_in_any_verb_mood():
