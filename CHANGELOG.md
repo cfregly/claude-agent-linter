@@ -3,6 +3,13 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-06-13
+
+### Fixed
+- CD006 judges "mutating" by the leading name token, not a substring. A read
+  whose object noun contains a verb ("list_charges", "get_payments", "get_post")
+  is no longer mislabelled a mutation. Found by linting the real Stripe MCP.
+
 ## [0.1.4] - 2026-06-13
 
 ### Fixed

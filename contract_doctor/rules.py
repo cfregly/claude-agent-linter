@@ -29,6 +29,13 @@ MUTATING_VERBS = (
     "add", "insert", "upload", "execute", "deploy", "cancel", "charge", "pay",
     "transfer", "publish", "submit",
 )
+MUTATING_SET = {v.rstrip("_") for v in MUTATING_VERBS}
+# Verbs rarely also used as nouns, safe to match anywhere in the name (catches
+# "bulk_create", "force_delete"). The noun-risky ones (charge, pay, post, add,
+# transfer, set) only count as the LEADING token, so "list_charges" and
+# "get_post" read as the reads they are, not as mutations.
+UNAMBIGUOUS_MUTATING = {"create", "update", "delete", "remove", "send", "write",
+                        "insert", "upload", "execute", "deploy", "publish"}
 
 # CD006 wants a mutation to state its SAFETY contract, not just name the action.
 # So this matches idempotency / retry-safety / reversibility language only -- not
@@ -229,9 +236,13 @@ def lint_tool(tool: dict) -> list[dict]:
             "the failure shape hallucinate around it.",
         ))
 
-    # CD006 — mutations must declare side effects and idempotency.
-    lowered = name.lower()
-    if any(lowered.startswith(v) or f"_{v}" in lowered for v in MUTATING_VERBS):
+    # CD006 — mutations must declare side effects and idempotency. Mutating is
+    # judged by the leading name token (verb_noun: "create_x", "charge_card"),
+    # plus an unambiguous verb anywhere ("bulk_create"). A trailing noun that
+    # merely contains a verb is not a mutation: "list_charges" is a read.
+    tokens = [t for t in re.split(r"[_\-]", name.lower()) if t]
+    lead = tokens[0] if tokens else ""
+    if lead in MUTATING_SET or any(t in UNAMBIGUOUS_MUTATING for t in tokens[1:]):
         if not SIDE_EFFECT_LANGUAGE.search(desc):
             findings.append(_finding(
                 "CD006", "error", name,

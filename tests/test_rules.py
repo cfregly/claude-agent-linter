@@ -201,6 +201,19 @@ def test_cd003_allows_short_but_informative_descriptions():
     assert "owner" in params        # only echoes the name -> flagged
 
 
+def test_cd006_verb_noun_reads_are_not_mutations():
+    # Regression from the real Stripe MCP: "list_charges" is a read; the noun
+    # "charges" contains the verb "charge". A trailing verb-noun is not a mutation.
+    def cd006(name):
+        return "CD006" in {f["rule"] for f in lint_tool({"name": name,
+            "description": "Returns rows, or an error if the query fails.",
+            "inputSchema": {"type": "object", "properties": {"x": {"type": "string", "description": "The id to act on."}}}})}
+    for read in ("list_charges", "get_payments", "get_post", "search_transfers"):
+        assert not cd006(read), read
+    for mut in ("create_payout", "charge_card", "post_message", "bulk_create_users"):
+        assert cd006(mut), mut
+
+
 def test_cd006_requires_safety_language_in_any_verb_mood():
     base = {"inputSchema": {"type": "object", "properties": {
         "id": {"type": "string", "description": "The record id to act on."}}, "required": ["id"]}}
