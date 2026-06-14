@@ -66,7 +66,7 @@ Server score: 100/100 (grade A)
 ## It caught a real one: my demo repo failed its own lint
 
 The first real server this linter ever scored was the MCP server in the sibling repo
-[`claude-prompt-to-production`](https://github.com/cfregly/claude-prompt-to-production) - 
+[`claude-prompt-to-production`](https://github.com/cfregly/claude-prompt-to-production) -
 a repo whose entire pitch is teaching tool-contract discipline. Its docstrings
 preach the gospel: exact semantics, failure modes, what not to infer. The repo
 even says, in a comment, *"vague descriptions are the #1 agent bug in the wild."*
@@ -108,7 +108,7 @@ python -m contract_doctor examples/vague_tools.json --judge
 ```
 
 The deterministic rules pick the worst tool (`send`, score 11) and hand Claude
-the definition plus the findings. Claude returns a rewritten contract - 
+the definition plus the findings. Claude returns a rewritten contract -
 delivery semantics, non-idempotency declared, error shape per field, enum'd
 priority tiers, worked example - and the linter re-scores it:
 

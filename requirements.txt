@@ -1,4 +1,4 @@
-# Core linter: stdlib only — nothing to install.
+# Core linter: stdlib only - nothing to install.
 #
 # Optional extras:
 #   anthropic   # --judge: Claude rewrites the worst tool contract
