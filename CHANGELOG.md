@@ -3,6 +3,18 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-06-13
+
+### Fixed
+- CD003 no longer flags a short but informative parameter description (for
+  example "Commit message"). It fires on an empty description or one that only
+  echoes the parameter name. Found by linting the official GitHub MCP server,
+  which the linter used to flunk on clear descriptions.
+- CD006 requires an idempotency or retry-safety statement in any verb mood, so
+  "Create a file" and "Creates a file" are judged the same. The old list let
+  "deletes" suppress the rule but not "removes", and imperative mood always
+  tripped it.
+
 ## [0.1.2] - 2026-06-13
 
 ### Fixed

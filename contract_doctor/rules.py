@@ -30,10 +30,15 @@ MUTATING_VERBS = (
     "transfer", "publish", "submit",
 )
 
+# CD006 wants a mutation to state its SAFETY contract, not just name the action.
+# So this matches idempotency / retry-safety / reversibility language only -- not
+# the verb. That makes it mood-agnostic: "Create a file" and "Creates a file"
+# are treated the same (both fire unless they also declare retry-safety), instead
+# of the old list where "deletes" suppressed CD006 but "removes" did not.
 SIDE_EFFECT_LANGUAGE = re.compile(
-    r"idempoten|side.?effect|irreversibl|creates|updates|deletes|modifies|"
-    r"overwrites|sends|appends|cannot be undone|permanent|safe to retry|"
-    r"no effect if|already exists",
+    r"idempoten|side.?effect|reversibl|irreversibl|cannot be undone|permanent|"
+    r"safe to (?:retry|repeat)|no-?op|no effect if|already exists|"
+    r"at most once|exactly once|dedup",
     re.I,
 )
 
@@ -169,13 +174,22 @@ def lint_tool(tool: dict) -> list[dict]:
             "not 'get_data'.",
         ))
 
-    # CD003 — every parameter the model must fill needs a description.
+    # CD003 — every parameter the model must fill needs a description that adds
+    # something past the name. Empty is always a defect. A short description is
+    # fine when it carries real information ("Commit message" adds "commit"), and
+    # a defect when it only echoes the parameter name ("message", "id") or is
+    # near-empty. Length alone is not the test: "Commit message" is 14 clear
+    # characters, and flagging it as undocumented is noise on real servers.
     for pname, pschema in props.items():
         pdesc = (pschema.get("description") or "").strip()
-        if len(pdesc) < 15:
+        name_words = set(re.findall(r"[a-z]{2,}", pname.lower()))
+        extra = set(re.findall(r"[a-z]{2,}", pdesc.lower())) - name_words
+        if not pdesc or (len(pdesc) < 15 and not extra):
+            shape = "has no description" if not pdesc \
+                else f"only restates the name ({len(pdesc)} chars)"
             findings.append(_finding(
                 "CD003", "error", name,
-                f"parameter '{pname}' has no usable description ({len(pdesc)} chars)",
+                f"parameter '{pname}' {shape}",
                 "Describe the parameter's meaning, accepted values, and an example. "
                 "Undocumented params are where agents invent arguments.",
                 param=pname,

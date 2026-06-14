@@ -188,6 +188,29 @@ def test_grade_boundaries():
     assert grade(90) == "A" and grade(89) == "B" and grade(49) == "F"
 
 
+def test_cd003_allows_short_but_informative_descriptions():
+    # Regression from linting the real GitHub MCP server: "Commit message" (14
+    # chars) is clear and must not be flagged; only empty or name-echoing descs do.
+    tool = {"name": "create_or_update_file", "description": "Create or update a "
+            "file. Idempotent on the path. Returns the commit sha, or an error if "
+            "the branch is missing.", "inputSchema": {"type": "object", "properties": {
+                "message": {"type": "string", "description": "Commit message"},
+                "owner": {"type": "string", "description": "owner"}}}}
+    params = {f["param"] for f in lint_tool(tool) if f["rule"] == "CD003"}
+    assert "message" not in params  # adds 'commit' past the name -> fine
+    assert "owner" in params        # only echoes the name -> flagged
+
+
+def test_cd006_requires_safety_language_in_any_verb_mood():
+    base = {"inputSchema": {"type": "object", "properties": {
+        "id": {"type": "string", "description": "The record id to act on."}}, "required": ["id"]}}
+    def fires(desc):
+        return "CD006" in {f["rule"] for f in lint_tool({"name": "create_record", "description": desc, **base})}
+    assert fires("Create a record. Returns the id.")    # imperative, no idempotency
+    assert fires("Creates a record. Returns the id.")   # -s form, was wrongly suppressed
+    assert not fires("Create a record. Idempotent: the same key is a no-op. Returns the id.")
+
+
 def test_secret_handle_is_not_flagged_but_raw_secret_is():
     # CD012 must not punish the pattern it recommends: a handle/reference that
     # resolves server-side is the fix, not the defect. A raw secret still trips.
