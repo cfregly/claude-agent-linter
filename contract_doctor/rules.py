@@ -389,17 +389,25 @@ def lint_overlap(tools: list[dict]) -> list[dict]:
     return findings
 
 
-# A tool that runs a raw, free-form query or command against the backend: the
-# escape hatch the agent reaches for instead of the curated tools.
+# A tool that runs a RAW, free-form query against the backend: the escape hatch
+# the agent reaches for instead of the curated tools. Kept narrow on purpose --
+# a bare "raw"/"eval" token collides with raw DATA and model EVALUATION
+# ("import_model_eval", "raw_bench_compare" are not escape hatches), and a tool
+# that runs one specific command is not a passthrough. The signal is a name that
+# names a SQL/query passthrough, or a description that advertises arbitrary input.
 _RAW_QUERY_NAME = re.compile(
-    r"(^|_)(raw|sql|query|exec|execute|eval|cypher|graphql|passthrough|proxy)($|_)",
+    r"(^|_)(sql|passthrough|proxy|graphql|cypher)($|_)"
+    r"|(^|_)(run|raw|exec|execute)_(quer(?:y|ies)|command|code|sql)($|_)", re.I)
+_ESCAPE_HATCH_DESC = re.compile(
+    r"\b(arbitrary|free.?form|custom)\b[^.]{0,25}\b(sql|quer(?:y|ies)|command|code|script|graphql|cypher)\b"
+    r"|\b(pass|run|execute|submit)\s+any\b[^.]{0,25}\b(sql|quer|string|command|code)\b",
     re.I)
 
 
 def _is_escape_hatch(tool: dict) -> bool:
     name = tool.get("name", "")
     desc = tool.get("description") or ""
-    return bool(_RAW_QUERY_NAME.search(name)) or bool(INJECTION_SINK.search(desc))
+    return bool(_RAW_QUERY_NAME.search(name)) or bool(_ESCAPE_HATCH_DESC.search(desc))
 
 
 def lint_discoverability(tools: list[dict]) -> list[dict]:

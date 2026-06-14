@@ -3,6 +3,15 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2026-06-13
+
+### Fixed
+- CD015 detection is narrowed to genuine raw-query passthroughs. A bare `raw` or
+  `eval` token in a name is not an escape hatch: `import_model_eval` (model
+  evaluation) and `raw_bench_compare` (raw benchmark data) are curated tools.
+  Found by dogfooding the rule on a real 51-tool MCP server, where it false-fired
+  on three of them.
+
 ## [0.1.7] - 2026-06-13
 
 ### Added

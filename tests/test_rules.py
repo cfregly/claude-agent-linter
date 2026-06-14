@@ -182,6 +182,15 @@ def test_cd015_flags_a_raw_escape_hatch_beside_curated_tools():
     # the curated tools alone (no escape hatch) must not trip CD015
     clean = {f["rule"] for t in lint_server(surface[:3])["tools"].values() for f in t["findings"]}
     assert "CD015" not in clean
+    # "eval" (model evaluation) and "raw" (raw data) tokens are not escape hatches.
+    # Found by dogfooding the rule on a real 51-tool server.
+    not_hatches = [
+        {"name": "import_model_eval", "description": "Import an lm-eval-harness results.json into a quality cell.", "inputSchema": {"type": "object", "properties": {}}},
+        {"name": "raw_bench_compare", "description": "Render a comparison PDF from a raw_bench_compare manifest.", "inputSchema": {"type": "object", "properties": {}}},
+        {"name": "list_services", "description": "List services with profiling data. Returns an array.", "inputSchema": {"type": "object", "properties": {}}},
+    ]
+    nh = {f["rule"] for t in lint_server(not_hatches)["tools"].values() for f in t["findings"]}
+    assert "CD015" not in nh
 
 
 def test_protocol_flags_missing_boundaries():
