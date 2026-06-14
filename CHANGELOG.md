@@ -3,6 +3,16 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-06-13
+
+### Fixed
+- CD014 (injection sink) now catches conjugated verbs (`Runs a SQL query`,
+  `executes the command`), closing a security false negative where a tool that
+  forwards raw SQL scored a clean B.
+- CD008 (overlap) flags the same object under synonym verbs (`search_tickets`
+  vs `find_tickets`) that raw token overlap missed, using a shared-object plus
+  read-verb signal.
+
 ## [0.1.0] - 2026-06-13
 
 ### Added

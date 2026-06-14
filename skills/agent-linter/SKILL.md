@@ -39,7 +39,7 @@ Fix every error, justify every surviving warning. Gate it in CI:
 `python -m contract_doctor your_tools.json --min-score 80 || exit 1`.
 
 ### 4. Optional: the judge loop
-`--judge` hands Claude the worst tool plus its findings; Claude rewrites the
+`--judge` hands Claude the worst tool plus its findings. Claude rewrites the
 contract and the linter re-scores it. The judge writes prose, the linter keeps
 the score honest.
 

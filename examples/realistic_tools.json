@@ -1,0 +1,72 @@
+{
+  "_comment": "A realistic MCP server: a competent engineer's first draft, not a strawman. It scores in the C band, between the vague example (19) and the contract-grade rewrite (100). The descriptions read fine to a human but miss the agent-contract subtleties that cause misfires: a money-moving tool with no idempotency contract and a secret passed as a model-visible argument, a tool that forwards raw SQL, and two search tools the model cannot choose between. This is the example to study, because real servers look like this.",
+  "tools": [
+    {
+      "name": "search_tickets",
+      "description": "Search the support ticket database by keyword and status. Returns tickets matching the query so the agent can find the relevant conversation before acting.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {"type": "string", "description": "Keywords to search ticket subjects and bodies for."},
+          "status": {"type": "string", "description": "Filter by ticket status."}
+        }
+      }
+    },
+    {
+      "name": "find_tickets",
+      "description": "Look up support tickets in the database using a search term and an optional status filter. Returns the tickets that match so the agent can locate the right conversation.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "q": {"type": "string", "description": "The search term."},
+          "state": {"type": "string", "description": "Optional status filter."}
+        }
+      }
+    },
+    {
+      "name": "get_customer",
+      "description": "Fetch a customer record by customer id. Returns the customer's profile, plan tier, and lifetime value as JSON. Returns an error object with the string 'not_found' if no customer has that id.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "customer_id": {"type": "string", "description": "The customer's unique id, formatted as 'cus_' followed by 14 alphanumerics, e.g. 'cus_0a1b2c3d4e5f6g'."}
+        },
+        "required": ["customer_id"]
+      }
+    },
+    {
+      "name": "issue_refund",
+      "description": "Issues a refund to the customer for the given order.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "order_id": {"type": "string", "description": "The order to refund."},
+          "amount": {"type": "number", "description": "Amount in dollars."},
+          "api_key": {"type": "string", "description": "The Stripe secret key used to authorize the refund."}
+        }
+      }
+    },
+    {
+      "name": "update_ticket",
+      "description": "Updates a ticket.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "ticket_id": {"type": "string", "description": "Ticket id."},
+          "fields": {"type": "object", "description": "Fields to change."}
+        }
+      }
+    },
+    {
+      "name": "run_analytics_query",
+      "description": "Runs a SQL query against the analytics warehouse and returns the result rows so the agent can answer reporting questions. Pass any SQL string and it executes against the read replica.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "sql": {"type": "string", "description": "The raw SQL query to execute."}
+        },
+        "required": ["sql"]
+      }
+    }
+  ]
+}

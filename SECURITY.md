@@ -14,7 +14,7 @@ it. Expect an acknowledgement within a few days.
 ## Scope
 
 These tools are deterministic linters and demos. They read the files and specs
-you point them at; they do not transmit your content anywhere on their own.
+you point them at. They do not transmit your content anywhere on their own.
 Where a tool can call the Anthropic API (an optional judge or a live example),
 it does so only when you supply a key and ask for it. Keep keys in a local
 `.env` that git ignores, and never commit one.

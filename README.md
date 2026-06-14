@@ -5,7 +5,7 @@
 
 ![agent-linter: a vague server scores 19, the contract-grade rewrite scores 100](docs/demo.svg)
 
-**Harden the agent and assistant interfaces.** Turn vague MCP tools into contract-grade agent interfaces. A vague example server scores 19/100; the contract-grade rewrite scores 100/100. 14 rules, including an OWASP/STRIDE security lens.
+**Harden the agent and assistant interfaces.** Turn vague MCP tools into contract-grade agent interfaces. A vague example server scores 19/100. The contract-grade rewrite scores 100/100. 14 rules, including an OWASP/STRIDE security lens.
 
 Most agent bugs aren't model failures - they're vague tool semantics. The model
 is the caller of your API, and it can't read your source. A tool description
@@ -27,6 +27,7 @@ beat vibes even for prose.
 git clone https://github.com/cfregly/claude-agent-linter && cd claude-agent-linter
 python -m contract_doctor examples/vague_tools.json          # the "before"
 python -m contract_doctor examples/contract_grade_tools.json # the "after"
+python -m contract_doctor examples/realistic_tools.json      # a real server: 66/100, grade C
 python tests/test_rules.py                                   # the test suite
 ```
 
@@ -146,7 +147,7 @@ C ≥65, D ≥50, F below.
 
 ## Lint the agent protocol, not just the tools
 
-Tools are half the contract; the agent's rules of engagement are the other
+Tools are half the contract. The agent's rules of engagement are the other
 half. Lint a protocol doc (AGENTS.md or a SKILL.md) for the boundaries an agent
 needs, grouped the way the AGENTS.md convention does:
 
@@ -189,7 +190,7 @@ The linter grades the tool contract, not the code behind it: a 100/100 server
 can still have bugs behind a well-described interface. The security rules
 (CD012-CD014) are a first pass over the threats specific to LLM-callable tools,
 not a full security review. The judge loop needs an API key and is not
-deterministic; the rules keep the score honest.
+deterministic. The rules keep the score honest.
 
 ## License
 

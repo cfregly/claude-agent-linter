@@ -123,6 +123,50 @@ def test_contract_grade_tools_have_no_security_findings():
         assert not (sec & {f["rule"] for f in t["findings"]}), t["findings"]
 
 
+def test_injection_sink_catches_conjugated_verbs():
+    # Regression: "Runs"/"executes" must trip CD014 like "run"/"execute". The
+    # plural form slipped through once and a raw-SQL tool scored a clean B --
+    # a security false negative is the worst kind.
+    for desc in [
+        "Runs a SQL query against the warehouse and returns the rows. Pass any "
+        "SQL string and it executes against the read replica.",
+        "Forwards the command to the system shell and returns stdout.",
+    ]:
+        tool = {"name": "do_thing", "description": desc,
+                "inputSchema": {"type": "object", "properties": {}}}
+        assert "CD014" in {f["rule"] for f in lint_tool(tool)}, desc
+
+
+def test_overlap_catches_synonym_verbs_on_same_object():
+    # 'search_tickets' vs 'find_tickets' share no verb token and rename their
+    # params, so raw token overlap is low (~0.43) -- but they are the same
+    # tool. The shared-object + read-verb signal must still flag the dup.
+    twins = [
+        {"name": "search_tickets", "description": "Search the support ticket "
+         "database by keyword and status. Returns tickets matching the query so "
+         "the agent can find the relevant conversation before acting."},
+        {"name": "find_tickets", "description": "Look up support tickets in the "
+         "database using a search term and an optional status filter. Returns the "
+         "tickets that match so the agent can locate the right conversation."},
+    ]
+    report = lint_server(twins)
+    rules = {f["rule"] for t in report["tools"].values() for f in t["findings"]}
+    assert "CD008" in rules, rules
+
+
+def test_realistic_server_lands_in_the_middle_band_with_security_findings():
+    # The bundled realistic server scores in the C band, between the vague
+    # example (19) and the contract-grade rewrite (100). The dangerous tools
+    # must surface the security lens: a secret-as-arg and a destructive money
+    # tool with no safety contract, a raw-SQL sink, and a duplicate pair.
+    report = lint_server(load("realistic_tools.json"))
+    assert 55 <= report["server_score"] < 80, report["server_score"]
+    refund = {f["rule"] for f in report["tools"]["issue_refund"]["findings"]}
+    assert {"CD012", "CD013"} <= refund, refund
+    allrules = {f["rule"] for t in report["tools"].values() for f in t["findings"]}
+    assert "CD014" in allrules and "CD008" in allrules, allrules
+
+
 def test_protocol_flags_missing_boundaries():
     from contract_doctor.protocol import lint_agent_protocol
     rep = lint_agent_protocol("This agent summarizes invoices for the finance team.")

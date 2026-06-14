@@ -82,8 +82,14 @@ SAFETY_LANGUAGE = re.compile(
     r"\b(idempotent|reversible|undo|restore|recoverable|confirm|dry[ -]?run|"
     r"no-op|soft[ -]?delete|retain|suppress)", re.I)
 # Executes or forwards free-form input into a powerful sink (injection / SSRF).
+# The verb alternation matches conjugations on purpose: "Runs a SQL query" and
+# "executes the command" are the same sink as "run"/"execute". Missing the
+# plural form once let a raw-SQL tool score a clean B -- a security false
+# negative is the worst kind, so the stems below cover run/runs/running,
+# execute/executes/executing, evaluate/evaluates, and forward/forwards/passes.
 INJECTION_SINK = re.compile(
-    r"\b(execute|eval|evaluate|run)\b[^.]{0,30}\b(shell|command|code|sql|query|script)\b"
+    r"\b(?:execut\w*|eval(?:uat\w*)?|runs?|running|forward\w*|pass(?:es)?)\b"
+    r"[^.]{0,30}\b(shell|command|code|sql|query|script)\b"
     r"|\bsubprocess\b|\bos\.system\b|\braw sql\b"
     r"|\brender[s]?\b[^.]{0,20}\bhtml\b"
     r"|\bfetch(?:es)?\b[^.]{0,30}\b(?:url|uri|endpoint)\b"
@@ -283,6 +289,29 @@ def lint_tool(tool: dict) -> list[dict]:
     return findings
 
 
+# Read/search verbs. Two tools that run the same verb-class on the same object
+# ('search_tickets' vs 'find_tickets') read as distinct to a token-overlap check
+# -- the synonyms 'search'/'find' and renamed params drag the score down -- yet
+# they force the model into a coin flip. The shared-object signal below catches
+# that case at a lower similarity bar than unrelated tools need.
+_READ_VERBS = {"search", "find", "lookup", "list", "query", "fetch", "get",
+               "retrieve", "read", "load", "show"}
+
+
+def _name_parts(name: str) -> list[str]:
+    return [p for p in re.split(r"[_\-]", (name or "").lower()) if p]
+
+
+def _object_noun(name: str) -> str:
+    parts = _name_parts(name)
+    return parts[-1].rstrip("s") if parts else ""   # tickets -> ticket
+
+
+def _lead_verb(name: str) -> str:
+    parts = _name_parts(name)
+    return parts[0] if parts else ""
+
+
 def lint_overlap(tools: list[dict]) -> list[dict]:
     """CD008 — near-duplicate tools make routing a coin flip."""
     findings = []
@@ -296,7 +325,12 @@ def lint_overlap(tools: list[dict]) -> list[dict]:
         if not ta or not tb:
             continue
         jaccard = len(ta & tb) / len(ta | tb)
-        if jaccard > 0.55:
+        na, nb = a.get("name", ""), b.get("name", "")
+        same_object = bool(_object_noun(na)) and _object_noun(na) == _object_noun(nb)
+        both_read = _lead_verb(na) in _READ_VERBS and _lead_verb(nb) in _READ_VERBS
+        # Unrelated tools need real text overlap; two read-verbs on the same
+        # object trip at a lower bar because the names alone signal the dup.
+        if jaccard > 0.55 or (same_object and both_read and jaccard > 0.30):
             findings.append(_finding(
                 "CD008", "warn", a.get("name"),
                 f"overlaps with '{b.get('name')}' (similarity {jaccard:.2f}); "
