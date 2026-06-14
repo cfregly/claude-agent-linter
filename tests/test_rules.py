@@ -167,6 +167,23 @@ def test_realistic_server_lands_in_the_middle_band_with_security_findings():
     assert "CD014" in allrules and "CD008" in allrules, allrules
 
 
+def test_cd015_flags_a_raw_escape_hatch_beside_curated_tools():
+    # The thin-zymtrace failure: a raw-query tool next to curated tools makes the
+    # agent bypass the surface and hit the backend directly. Discovery is part of
+    # the contract.
+    surface = [
+        {"name": "topfunctions", "description": "Return the top GPU functions by self time for a service and window. Returns a ranked list, or an error if empty.", "inputSchema": {"type": "object", "properties": {"service": {"type": "string", "description": "Service name to profile."}}}},
+        {"name": "flamegraph", "description": "Render a flamegraph for a service and window. Returns a frame tree, or an error if no samples.", "inputSchema": {"type": "object", "properties": {"service": {"type": "string", "description": "Service name to profile."}}}},
+        {"name": "list_services", "description": "List services with profiling data in the retention window. Returns an array, empty if none.", "inputSchema": {"type": "object", "properties": {}}},
+        {"name": "run_clickhouse_query", "description": "Run an arbitrary ClickHouse SQL query and return rows. Pass any SELECT.", "inputSchema": {"type": "object", "properties": {"sql": {"type": "string", "description": "The SQL query to run."}}}},
+    ]
+    rules = {f["rule"] for t in lint_server(surface)["tools"].values() for f in t["findings"]}
+    assert "CD015" in rules
+    # the curated tools alone (no escape hatch) must not trip CD015
+    clean = {f["rule"] for t in lint_server(surface[:3])["tools"].values() for f in t["findings"]}
+    assert "CD015" not in clean
+
+
 def test_protocol_flags_missing_boundaries():
     from contract_doctor.protocol import lint_agent_protocol
     rep = lint_agent_protocol("This agent summarizes invoices for the finance team.")

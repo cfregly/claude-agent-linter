@@ -3,6 +3,16 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] - 2026-06-13
+
+### Added
+- CD015, a tool-discovery rule: a raw query/exec escape hatch (`run_sql`, a tool
+  that forwards free-form SQL) sitting beside curated tools makes the agent
+  prefer the passthrough and bypass the surface. This is the thin-zymtrace
+  failure, where a coarse MCP surface drove agents to raw ClickHouse SELECTs
+  instead of the server. Discovery is part of the contract: if the agent can
+  route around your tools, they go unused.
+
 ## [0.1.6] - 2026-06-13
 
 ### Fixed

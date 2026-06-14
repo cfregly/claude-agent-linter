@@ -5,7 +5,7 @@
 
 ![agent-linter: a vague server scores 19, the contract-grade rewrite scores 100](docs/demo.svg)
 
-**Harden the agent and assistant interfaces.** Turn vague MCP tools into contract-grade agent interfaces. A vague example server scores 19/100. The contract-grade rewrite scores 100/100. 14 rules, including an OWASP/STRIDE security lens.
+**Harden the agent and assistant interfaces.** Turn vague MCP tools into contract-grade agent interfaces. A vague example server scores 19/100. The contract-grade rewrite scores 100/100. 15 rules, including an OWASP/STRIDE security lens and a tool-discovery check.
 
 Most agent bugs aren't model failures - they're vague tool semantics. The model
 is the caller of your API, and it can't read your source. A tool description
@@ -17,7 +17,7 @@ beat vibes even for prose.
 
 - **Problem it solves:** agents misuse tools whose contracts are underspecified. Teams debug the model when they should be fixing the interface.
 - **Run in under 5 minutes:** `python -m contract_doctor examples/vague_tools.json` - no dependencies, stdlib only.
-- **Learn in 15 minutes:** the fourteen contract rules below, the CI gate, and the judge loop.
+- **Learn in 15 minutes:** the fifteen contract rules below, the CI gate, and the judge loop.
 - **Claude features it proves:** MCP tool schemas as a first-class surface, plus Claude-as-judge with deterministic re-validation.
 - **Production lesson it encodes:** tool descriptions are API contracts. Failure modes and side effects are half the contract.
 
@@ -119,7 +119,7 @@ re-lint: 11 (F) -> 100 (A)
 
 The judge writes prose. The linter keeps the score honest. That order matters.
 
-## The fourteen rules
+## The fifteen rules
 
 | Rule | Severity | What it catches |
 |---|---|---|
@@ -137,6 +137,7 @@ The judge writes prose. The linter keeps the score honest. That order matters.
 | CD012 | warn | Security: a raw secret passed as a model-visible argument |
 | CD013 | warn | Security: a destructive op (delete, charge, transfer) with no stated reversibility or confirmation |
 | CD014 | warn | Security: executes or forwards free-form input into a code, shell, SQL, or URL sink (injection / SSRF) |
+| CD015 | warn | Discovery: a raw query/exec escape hatch beside curated tools, so the agent bypasses the surface and hits the backend directly |
 
 CD012-CD014 are the agent/MCP slice of an OWASP + STRIDE pass: the threats that
 are specific to tools an LLM can call. Each finding also carries a `fix_kind`

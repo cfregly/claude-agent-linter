@@ -389,6 +389,42 @@ def lint_overlap(tools: list[dict]) -> list[dict]:
     return findings
 
 
+# A tool that runs a raw, free-form query or command against the backend: the
+# escape hatch the agent reaches for instead of the curated tools.
+_RAW_QUERY_NAME = re.compile(
+    r"(^|_)(raw|sql|query|exec|execute|eval|cypher|graphql|passthrough|proxy)($|_)",
+    re.I)
+
+
+def _is_escape_hatch(tool: dict) -> bool:
+    name = tool.get("name", "")
+    desc = tool.get("description") or ""
+    return bool(_RAW_QUERY_NAME.search(name)) or bool(INJECTION_SINK.search(desc))
+
+
+def lint_discoverability(tools: list[dict]) -> list[dict]:
+    """CD015 — tool-surface discoverability. A raw query/exec escape hatch
+    (`run_sql`, a tool that forwards free-form SQL) sitting beside curated domain
+    tools makes the agent reach for the flexible passthrough and bypass the
+    surface. This is the thin-zymtrace failure: a coarse MCP surface drove agents
+    to raw ClickHouse SELECTs instead of the server. Discovery is part of the
+    contract -- if the agent can route around your tools, your tools go unused."""
+    findings = []
+    hatches = [t for t in tools if _is_escape_hatch(t)]
+    domain = [t for t in tools if not _is_escape_hatch(t)]
+    if hatches and len(domain) >= 2:
+        for h in hatches:
+            findings.append(_finding(
+                "CD015", "warn", h.get("name"),
+                f"raw query/exec escape hatch beside {len(domain)} curated tool(s): "
+                "the agent will prefer the flexible passthrough and bypass the surface",
+                "Remove the passthrough, or make the domain tools cover the real "
+                "query patterns so the agent never needs it. A thin surface plus a "
+                "raw escape hatch is why agents query the backend directly.",
+            ))
+    return findings
+
+
 def score_tool(findings: list[dict]) -> int:
     score = 100
     for f in findings:
@@ -412,9 +448,12 @@ def lint_server(tools: list[dict]) -> dict:
     """Lint every tool plus cross-tool rules. Returns the full report dict."""
     per_tool = {}
     overlap = lint_overlap(tools)
+    disco = lint_discoverability(tools)
     for tool in tools:
         name = tool.get("name", "<unnamed>")
-        findings = lint_tool(tool) + [f for f in overlap if f["tool"] == name]
+        findings = (lint_tool(tool)
+                    + [f for f in overlap if f["tool"] == name]
+                    + [f for f in disco if f["tool"] == name])
         per_tool[name] = {
             "score": score_tool(findings),
             "grade": grade(score_tool(findings)),

@@ -2,8 +2,10 @@
 name: agent-linter
 description: >-
   Harden an agent's tools and protocol with Claude. Lint MCP tool definitions
-  into contract-grade interfaces, scored against 14 rules including an
-  OWASP/STRIDE security lens (secrets, destructive ops, injection), then
+  into contract-grade interfaces, scored against 15 rules including an
+  OWASP/STRIDE security lens (secrets, destructive ops, injection) and a
+  tool-discovery check (a raw-query escape hatch that makes the agent bypass the
+  surface), then
   optionally have Claude rewrite the worst tool and re-score it. Also check an
   agent protocol for the always-do / ask-first / never-do boundaries and a
   failure plan. Use when someone wants to lint MCP tools, harden an agent,
